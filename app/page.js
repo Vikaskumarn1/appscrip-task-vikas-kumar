@@ -6,74 +6,26 @@ export const metadata = {
   description: 'Shop the latest products with Appscrip. Browse our collection of quality items from around the world.',
 }
 
+// Revalidate every 3600 seconds (1 hour)
 export const revalidate = 3600
 
 async function fetchProducts() {
   try {
     const response = await fetch('https://fakestoreapi.com/products', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://appscrip-task-vikas-kumar.vercel.app',
-      },
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 } // Cache for 1 hour
     })
 
     if (!response.ok) {
       console.error(`API Error: ${response.status}`)
-      // Return mock data if API fails
-      return getMockProducts()
+      return []
     }
 
     const data = await response.json()
-    return data || getMockProducts()
+    return data || []
   } catch (error) {
     console.error('Error fetching products:', error)
-    return getMockProducts()
+    return []
   }
-}
-
-// Fallback mock data if API fails
-function getMockProducts() {
-  return [
-    {
-      id: 1,
-      title: 'Fjallraven Backpack',
-      price: 109.95,
-      description: 'Your perfect pack for everyday adventures. Sleek yet stylish backpack.',
-      category: 'electronics',
-      image: 'https://fakestoreapi.com/img/81fPKd-2AzL._AC_SL1500_.jpg',
-      rating: { rate: 3.9, count: 120 }
-    },
-    {
-      id: 2,
-      title: 'Mens Casual Premium Slim Fit',
-      price: 22.3,
-      description: 'Slim-fitting style, contrast raglan long sleeve.',
-      category: 'clothing',
-      image: 'https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_QL65_ML3_.jpg',
-      rating: { rate: 4.1, count: 259 }
-    },
-    {
-      id: 3,
-      title: 'White Gold Plated Princess',
-      price: 9.99,
-      description: 'Classic Collection Engagement Wedding Ring.',
-      category: 'jewelery',
-      image: 'https://fakestoreapi.com/img/71YAIFU48IL._AC_UL640_QL65_ML3_.jpg',
-      rating: { rate: 3, count: 52 }
-    },
-    {
-      id: 4,
-      title: 'Can_Bus Adapter',
-      price: 15.13,
-      description: 'Devices you love can be easily transferred here.',
-      category: 'electronics',
-      image: 'https://fakestoreapi.com/img/61IBBVJvPGL._AC_SY879_.jpg',
-      rating: { rate: 2.2, count: 430 }
-    }
-  ]
 }
 
 function ProductCard({ product }) {
@@ -88,9 +40,6 @@ function ProductCard({ product }) {
           className={styles.productImage}
           quality={75}
           loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = 'https://via.placeholder.com/200?text=No+Image'
-          }}
         />
       </div>
 
@@ -164,7 +113,7 @@ export default async function HomePage() {
           </section>
         ) : (
           <div className={styles.noProducts}>
-            <p>No products available. Please refresh the page.</p>
+            <p>No products available. Please try refreshing the page.</p>
           </div>
         )}
       </main>
