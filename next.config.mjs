@@ -5,19 +5,10 @@ const nextConfig = {
   images: {
     domains: ['fakestoreapi.com'],
     formats: ['image/avif', 'image/webp'],
+    unoptimized: false,
   },
-  headers: async () => {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-        ],
-      },
-    ]
+  env: {
+    NEXT_PUBLIC_API_URL: 'https://fakestoreapi.com',
   },
 }
 

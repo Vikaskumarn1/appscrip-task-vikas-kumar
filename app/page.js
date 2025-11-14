@@ -4,27 +4,31 @@ import styles from './page.module.css'
 export const metadata = {
   title: 'Appscrip - Product Listing Page',
   description: 'Shop the latest products with Appscrip. Browse our collection of quality items from around the world.',
-  openGraph: {
-    title: 'Appscrip - Premium Product Listing',
-    description: 'Shop the latest products with Appscrip',
-    type: 'website',
-  },
 }
 
 async function fetchProducts() {
   try {
+    // Add timeout and better error handling
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+
     const response = await fetch('https://fakestoreapi.com/products', {
-      cache: 'no-store', // Force fresh data (SSR)
+      signal: controller.signal,
+      cache: 'no-store',
       headers: {
-        'Content-Type': 'application/json',
-      },
+        'User-Agent': 'Mozilla/5.0'
+      }
     })
 
+    clearTimeout(timeoutId)
+
     if (!response.ok) {
-      throw new Error('Failed to fetch products')
+      console.error(`API Error: ${response.status}`)
+      return []
     }
 
-    return await response.json()
+    const data = await response.json()
+    return data || []
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
@@ -40,23 +44,21 @@ function ProductCard({ product }) {
           alt={`${product.title} - Buy online at Appscrip`}
           width={200}
           height={200}
-          priority={false}
           className={styles.productImage}
-          quality={80}
+          quality={75}
+          loading="lazy"
         />
       </div>
 
       <div className={styles.productContent}>
         <h2 className={styles.productTitle}>{product.title}</h2>
-
         <p className={styles.productCategory}>{product.category}</p>
-
         <p className={styles.productDescription}>
-          {product.description.substring(0, 80)}...
+          {product.description?.substring(0, 80)}...
         </p>
 
         <div className={styles.productFooter}>
-          <span className={styles.price}>${product.price.toFixed(2)}</span>
+          <span className={styles.price}>${product.price?.toFixed(2)}</span>
           <span className={styles.rating}>⭐ {product.rating?.rate || 'N/A'}</span>
         </div>
 
@@ -79,20 +81,7 @@ export default async function HomePage() {
             '@type': 'CollectionPage',
             name: 'Appscrip Product Listing',
             description: 'Premium product collection on Appscrip',
-            url: 'https://appscrip.com',
-            mainEntity: {
-              '@type': 'ItemList',
-              numberOfItems: products.length,
-              itemListElement: products.map((product, index) => ({
-                '@type': 'Product',
-                position: index + 1,
-                name: product.title,
-                image: product.image,
-                description: product.description,
-                price: product.price,
-                priceCurrency: 'USD',
-              })),
-            },
+            url: 'https://appscrip-task-vikas-kumar.vercel.app',
           }),
         }}
       />
@@ -106,10 +95,12 @@ export default async function HomePage() {
         </header>
 
         <section className={styles.filterSection}>
-          <h2 className={styles.filterTitle}>Products ({products.length})</h2>
+          <h2 className={styles.filterTitle}>
+            Products ({products?.length || 0})
+          </h2>
         </section>
 
-        {products.length > 0 ? (
+        {products && products.length > 0 ? (
           <section className={styles.productGrid}>
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -117,7 +108,7 @@ export default async function HomePage() {
           </section>
         ) : (
           <div className={styles.noProducts}>
-            <p>No products available at the moment. Please try again later.</p>
+            <p>Loading products... If this persists, please refresh the page.</p>
           </div>
         )}
       </main>
