@@ -76,27 +76,34 @@ export default function HomePage() {
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        
-        // Try to fetch from your API route first
+        setError(null)
+
         const response = await fetch('/api/products', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         })
+
+        console.log('API Response Status:', response.status)
 
         if (response.ok) {
           const data = await response.json()
-          if (data && data.length > 0) {
+          console.log('Data received:', data.length, 'products')
+
+          if (data && Array.isArray(data) && data.length > 0) {
             setProducts(data)
             setError(null)
+          } else {
+            console.warn('No products in response, using mock data')
           }
         } else {
-          console.warn('API failed, using mock data')
+          console.warn(`API returned status ${response.status}, using mock data`)
         }
       } catch (err) {
         console.error('Error fetching products:', err)
-        // Keep using mock data
+        setError(err.message)
       } finally {
         setLoading(false)
       }
@@ -132,6 +139,7 @@ export default function HomePage() {
           <h2 className={styles.filterTitle}>
             Products ({products?.length || 0})
           </h2>
+          {error && <p style={{ color: 'red' }}>Error: {error}</p>}
         </section>
 
         {!loading && products && products.length > 0 ? (
@@ -140,9 +148,13 @@ export default function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </section>
+        ) : loading ? (
+          <div className={styles.noProducts}>
+            <p>Loading products...</p>
+          </div>
         ) : (
           <div className={styles.noProducts}>
-            <p>{loading ? 'Loading products...' : 'No products available'}</p>
+            <p>No products available. Please refresh the page.</p>
           </div>
         )}
       </main>
