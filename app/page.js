@@ -6,21 +6,14 @@ export const metadata = {
   description: 'Shop the latest products with Appscrip. Browse our collection of quality items from around the world.',
 }
 
+// Revalidate every 3600 seconds (1 hour)
+export const revalidate = 3600
+
 async function fetchProducts() {
   try {
-    // Add timeout and better error handling
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
-
     const response = await fetch('https://fakestoreapi.com/products', {
-      signal: controller.signal,
-      cache: 'no-store',
-      headers: {
-        'User-Agent': 'Mozilla/5.0'
-      }
+      next: { revalidate: 3600 } // Cache for 1 hour
     })
-
-    clearTimeout(timeoutId)
 
     if (!response.ok) {
       console.error(`API Error: ${response.status}`)
@@ -82,6 +75,18 @@ export default async function HomePage() {
             name: 'Appscrip Product Listing',
             description: 'Premium product collection on Appscrip',
             url: 'https://appscrip-task-vikas-kumar.vercel.app',
+            mainEntity: {
+              '@type': 'ItemList',
+              numberOfItems: products?.length || 0,
+              itemListElement: (products || []).map((product, index) => ({
+                '@type': 'Product',
+                position: index + 1,
+                name: product.title,
+                image: product.image,
+                price: product.price,
+                priceCurrency: 'USD',
+              })),
+            },
           }),
         }}
       />
@@ -108,7 +113,7 @@ export default async function HomePage() {
           </section>
         ) : (
           <div className={styles.noProducts}>
-            <p>Loading products... If this persists, please refresh the page.</p>
+            <p>No products available. Please try refreshing the page.</p>
           </div>
         )}
       </main>
